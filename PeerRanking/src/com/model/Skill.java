@@ -7,7 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -28,23 +28,9 @@ public class Skill {
 	@OneToMany(mappedBy="skill",cascade=CascadeType.ALL)
 	private List<Ranking> ranking;
 	
-	@ManyToOne
-	private Person person; 
+	@ManyToMany
+	private List<Person> persons; 
 	
-	/**
-	 * @return the person
-	 */
-	public Person getPerson() {
-		return person;
-	}
-
-	/**
-	 * @param person the person to set
-	 */
-	public void setPerson(Person person) {
-		this.person = person;
-	}
-
 	/**
 	 * @return the skillName
 	 */
@@ -85,5 +71,53 @@ public class Skill {
 	public void setSkillId(int skillId) {
 		this.skillId = skillId;
 	}
-	
+
+	/**
+	 * @return the persons
+	 */
+	public List<Person> getPersons() {
+		return persons;
+	}
+	/**
+	 * @param persons the persons to set
+	 */
+	public void setPersons(List<Person> persons) {
+		this.persons = persons;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + skillId;
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Skill other = (Skill) obj;
+		if (skillId != other.skillId)
+			return false;
+		return true;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Skill [skillId=" + skillId + ", skillName=" + skillName + ", ranking=" + ranking + ", persons="
+				+ persons + "]";
+	}
+
 }

@@ -42,8 +42,9 @@ public class PeerStatusDAO {
 		Transaction tx=session.beginTransaction();
 		List<Ranking> rankings;
 		
-		Query query = session.createQuery("SELECT s.ranking from Person p join p.skills s "
-				+ "where p.name =:pName and s.skillName=:pSkillName");
+//		Query query = session.createQuery("SELECT s.ranking from Skill s join s.ranking r join s.persons p "
+//				+ "where s.skillName=:pSkillName and r.subject.name=:pName and p.name=:pName");
+		Query query = session.createQuery("SELECT r from Ranking r where r.subject.name=:pName and r.skill.skillName=:pSkillName ");
 		query.setParameter("pName", personName);
 		query.setParameter("pSkillName", skillToUpdate);
 		rankings=(List<Ranking>)query.list();
@@ -86,8 +87,8 @@ public class PeerStatusDAO {
 	{
 		Transaction tx=session.beginTransaction();
 		Long count = 0L;
-		Query query = session.createQuery("SELECT SUM(r.value) from Ranking r "
-				+ "where r.skill.person.id =:pId");
+		Query query = session.createQuery("SELECT SUM(r.value) from Ranking r join r.skill s join s.persons p "
+				+ "where p.id =:pId ");
 		query.setParameter("pId", personId);
 		
 		count=(Long) query.uniqueResult();
@@ -104,6 +105,21 @@ public class PeerStatusDAO {
 		Query query = session.createQuery("FROM Person P");
 		persons=(List<Person>)query.list();
 		
+		tx.commit();
+		return persons;
+	}
+	
+	public List<Object[]> getAllPersonsForASkill( String skillName, Session session ) throws NonUniqueResultException
+	{
+		Transaction tx=session.beginTransaction();
+		List<Object[]> persons;
+		
+		Query query = session.createQuery("SELECT AVG(r.value),P.name,s.skillName FROM Person P join P.skills s join s.ranking r "
+				+ "where s.skillName = :pSkillName "
+				+ "GROUP BY P.name,s.skillName ");
+		query.setParameter("pSkillName", skillName);
+		
+		persons=(List<Object[]>)query.list();
 		tx.commit();
 		return persons;
 	}

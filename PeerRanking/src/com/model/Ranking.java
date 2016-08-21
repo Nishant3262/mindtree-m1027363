@@ -22,6 +22,10 @@ public class Ranking {
 	@JoinColumn(name="OBSERVER_ID")
 	private Person rankedBy;
 	
+	@OneToOne
+	@JoinColumn(name="SUBJECT_ID")
+	private Person subject;
+	
 	@ManyToOne
 	private Skill skill;
 	/**
@@ -73,5 +77,66 @@ public class Ranking {
 	public void setSkill(Skill skill) {
 		this.skill = skill;
 	}
+	/**
+	 * @return the subject
+	 */
+	public Person getSubject() {
+		return subject;
+	}
+	/**
+	 * @param subject the subject to set
+	 */
+	public void setSubject(Person subject) {
+		this.subject = subject;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		result = prime * result + ((skill == null) ? 0 : skill.hashCode());
+		result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+		return result;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Ranking other = (Ranking) obj;
+		if (id != other.id)
+			return false;
+		if (skill == null) {
+			if (other.skill != null)
+				return false;
+		} else if (!skill.equals(other.skill))
+			return false;
+		if (subject == null) {
+			if (other.subject != null)
+				return false;
+		} else if (!subject.equals(other.subject))
+			return false;
+		return true;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Ranking [id=" + id + ", value=" + value + ", rankedBy=" + rankedBy + ", subject=" + subject + ", skill="
+				+ skill + "]";
+	}
+
+
+	
 	
 }

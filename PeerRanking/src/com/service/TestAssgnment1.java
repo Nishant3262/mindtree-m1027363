@@ -1,12 +1,13 @@
 package com.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -54,7 +55,9 @@ public class TestAssgnment1 {
 	{
 		List<Skill> skills = new ArrayList<Skill>();
 		skills.add(skill);
-		skill.setPerson(person);
+		List<Person> persons = new ArrayList<Person>();
+		persons.add(person);
+		skill.setPersons(persons);
 		person.setSkills(skills);
 		PeerStatusDAO peerDAO = new PeerStatusDAO();
 		//Cascade is implemented, for skill (in person) and ranking (in skill) entity
@@ -70,7 +73,9 @@ public class TestAssgnment1 {
 		List<Skill> skills = person.getSkills();
 		Skill skill=new Skill();
 		skill.setSkillName(skillName);
-		skill.setPerson(person);
+		List<Person> persons = new ArrayList<Person>();
+		persons.add(person);
+		skill.setPersons(persons);
 		skills.add(skill);
 		peerDAO.updatePerson(person, session);
 	}
@@ -81,21 +86,31 @@ public class TestAssgnment1 {
 		PeerStatusDAO peerDAO = new PeerStatusDAO();
 		Person person = peerDAO.getPersonByName(subjectName, session);
 		//If we got unique result
+		Boolean isSkillPresent=Boolean.FALSE;
 		for(Skill s:person.getSkills())
 		{
 			if(s.getSkillName().equals(skillToBeEvaluated))
 			{
+				isSkillPresent=Boolean.TRUE;
 				Person observerObj = peerDAO.getPersonByName(observerName, session);
 				Ranking rank=new Ranking();
 				rank.setValue(rankingValue);
 				rank.setRankedBy(observerObj);
 				rank.setSkill(s);
+				rank.setSubject(person);
 				List<Ranking> rankings=new ArrayList<Ranking>();
 				rankings.add(rank);
 				s.setRanking(rankings);
 			}
 		}
-		peerDAO.updatePerson(person, session);
+		if(isSkillPresent)
+		{
+			peerDAO.updatePerson(person, session);
+		}
+		else
+		{
+			System.out.println("Person : "+person.getName()+" do not have Skill named as : "+skillToBeEvaluated);
+		}
 	}
 	
 	//Update ranking by observer
@@ -123,15 +138,16 @@ public class TestAssgnment1 {
 		//If we got unique result.
 			Person observerObj = peerDAO.getPersonByName(observerName, session);
 			Ranking toBeRemove = null;
+			Person person = peerDAO.getPersonByName(subjectName, session);
 			for(Ranking r :rankings)
 			{
-				if(r.getRankedBy().getId()==observerObj.getId())
+				if(r.getRankedBy().getId()==observerObj.getId() && r.getSubject().getId()==person.getId())
 				{
 					toBeRemove=r;
 					
 				}
 			}
-			Person person = peerDAO.getPersonByName(subjectName, session);
+			
 			if(null != toBeRemove)
 			{
 				rankings.remove(toBeRemove);
@@ -187,10 +203,11 @@ public class TestAssgnment1 {
 			if(null!=total)
 			{
 				Long avg = total/skillSize;
+				//saving avg to transient variable 
+				p.setAvgRanking(avg);
 				if(topper==null)
 				{
 					topper=p;
-					p.setAvgRanking(avg);
 				}
 				else if(null != topper.getAvgRanking() && topper.getAvgRanking()<avg)
 				{
@@ -235,6 +252,30 @@ public class TestAssgnment1 {
 		
 	}
 	
+	//Sorting persons on basis of skill
+	public void sortOnBasisOfSkill(String skillName, Session session)
+	{
+		PeerStatusDAO peerDAO = new PeerStatusDAO();
+		
+		List<Object[]> groupResults = peerDAO.getAllPersonsForASkill(skillName, session);
+		
+		Collections.sort(groupResults, new Comparator<Object[]>() {
+
+			@Override
+			public int compare(Object[] arg0, Object[] arg1) {
+				return (int)(Float.parseFloat(arg0[0].toString()) - Float.parseFloat(arg1[0].toString()));
+			}
+
+		});
+		
+		System.out.println("##########################Sortation Begin##############");
+		for(Object[] obj : groupResults)
+		{
+			System.out.println("Person Name : "+obj[1]+" Skill Name : "+obj[2] + " with Ranking : "+(int)(Float.parseFloat(obj[0].toString())));
+		}
+		System.out.println("##########################Sortation END##############");
+	}
+	
 	//function to test service
 	public static void main(String[] args)
 	{
@@ -266,6 +307,20 @@ public class TestAssgnment1 {
 		
 		//Get avg of each user on each skill
 		test.getAvgForEachPersonForEachSkill(session);
+		
+		//Sorting Based on Rank (in given skill)
+		//stuffing ranking for particular skill (say SKILL_1) for all person.
+		test.addSkillToPerson("PERSON_0", "SKILL_1", session);
+		test.giveRanking("PERSON_1", "PERSON_0", "SKILL_1", 4,session);
+		test.addSkillToPerson("PERSON_2", "SKILL_1", session);
+		test.giveRanking("PERSON_1", "PERSON_2", "SKILL_1", 5,session);
+		test.addSkillToPerson("PERSON_3", "SKILL_1", session);
+		test.giveRanking("PERSON_1", "PERSON_3", "SKILL_1", 6,session);
+		test.addSkillToPerson("PERSON_4", "SKILL_1", session);
+		test.giveRanking("PERSON_1", "PERSON_4", "SKILL_1", 7,session);
+		
+		
+		test.sortOnBasisOfSkill("SKILL_1", session);
 		
 		
 		session.close();
